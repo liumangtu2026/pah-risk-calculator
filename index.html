@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>肺动脉高压危险分层评估工具</title>
+<style>
+  :root {
+    --blue-50: #eff6ff; --blue-100: #dbeafe; --blue-200: #bfdbfe; --blue-300: #93c5fd;
+    --blue-400: #60a5fa; --blue-500: #3b82f6; --blue-600: #2563eb; --blue-700: #1d4ed8;
+    --blue-800: #1e40af; --blue-900: #1e3a8a;
+    --green-50: #f0fdf4; --green-100: #dcfce7; --green-500: #22c55e; --green-600: #16a34a; --green-700: #15803d;
+    --yellow-50: #fefce8; --yellow-100: #fef9c3; --yellow-500: #eab308; --yellow-600: #ca8a04; --yellow-700: #a16207;
+    --red-50: #fef2f2; --red-100: #fee2e2; --red-500: #ef4444; --red-600: #dc2626; --red-700: #b91c1c;
+    --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb; --gray-300: #d1d5db;
+    --gray-400: #9ca3af; --gray-500: #6b7280; --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937; --gray-900: #111827;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(160deg, #f0f4ff 0%, #e8f0fe 40%, #f0f7ff 100%);
+    color: var(--gray-800); line-height: 1.6; min-height: 100vh;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--blue-800) 0%, var(--blue-600) 40%, #3b6ceb 100%);
+    color: #fff; padding: 22px 24px 20px; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .header::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--green-500), var(--yellow-500), var(--red-500));
+  }
+  .header h1 { font-size: 24px; font-weight: 700; letter-spacing: 0.5px; position: relative; z-index: 1; }
+  .header .subtitle { font-size: 13px; opacity: 0.8; margin-top: 4px; position: relative; z-index: 1; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+
+  .section-card {
+    background: #fff; border-radius: 14px; padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05); margin-bottom: 20px;
+    border: 1px solid var(--gray-100);
+  }
+  .section-card .section-head {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+    padding-bottom: 14px; border-bottom: 1px solid var(--gray-100);
+  }
+  .section-card .section-head .icon-circle {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; flex-shrink: 0;
+  }
+  .icon-blue   { background: var(--blue-100); color: var(--blue-700); }
+  .icon-green  { background: var(--green-100); color: var(--green-700); }
+  .icon-yellow { background: var(--yellow-100); color: var(--yellow-700); }
+  .icon-red    { background: var(--red-100); color: var(--red-700); }
+  .section-card .section-head h3 { font-size: 17px; font-weight: 700; color: var(--gray-800); }
+  .section-card .section-head .section-sub { font-size: 12px; color: var(--gray-400); margin-left: auto; }
+
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 13px; font-weight: 600; color: var(--gray-700); display: flex; align-items: center; gap: 6px; }
+  .form-group label .unit { font-weight: 400; color: var(--gray-400); font-size: 11.5px; }
+  .form-group select, .form-group input {
+    padding: 10px 12px; border: 1.5px solid var(--gray-200); border-radius: 8px;
+    font-size: 14px; color: var(--gray-800); background: var(--gray-50);
+    transition: all 0.2s; font-family: inherit; width: 100%;
+  }
+  .form-group select:focus, .form-group input:focus {
+    outline: none; border-color: var(--blue-400); box-shadow: 0 0 0 3px var(--blue-100);
+    background: #fff;
+  }
+  .form-group select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+  .form-group input[type="number"] { font-variant-numeric: tabular-nums; }
+  .form-hint { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+
+  .divider-text {
+    display: flex; align-items: center; gap: 12px; margin: 6px 0;
+    font-size: 12px; font-weight: 600; color: var(--blue-600); text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .divider-text::before, .divider-text::after { content: ''; flex: 1; height: 1px; background: var(--gray-200); }
+
+  .btn-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+  .btn {
+    padding: 12px 28px; border-radius: 10px; font-size: 15px; font-weight: 600;
+    cursor: pointer; border: none; transition: all 0.2s; font-family: inherit;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--blue-600), var(--blue-700));
+    color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(37,99,235,0.4); }
+  .btn-secondary {
+    background: #fff; color: var(--gray-600); border: 1.5px solid var(--gray-200);
+  }
+  .btn-secondary:hover { background: var(--gray-50); border-color: var(--gray-300); }
+
+  /* --- 结果面板 --- */
+  .result-panel { display: none; }
+  .result-panel.show { display: block; }
+
+  .result-hero {
+    border-radius: 16px; padding: 28px; text-align: center; margin-bottom: 20px;
+    color: #fff; position: relative; overflow: hidden;
+  }
+  .result-hero.risk-low    { background: linear-gradient(135deg, #15803d, #22c55e); }
+  .result-hero.risk-inter  { background: linear-gradient(135deg, #a16207, #eab308); }
+  .result-hero.risk-high   { background: linear-gradient(135deg, #b91c1c, #ef4444); }
+  .result-hero .risk-level {
+    font-size: 42px; font-weight: 800; letter-spacing: 2px; margin-bottom: 4px;
+  }
+  .result-hero .risk-eng   { font-size: 15px; opacity: 0.85; font-weight: 500; margin-bottom: 10px; }
+  .result-hero .risk-desc  { font-size: 14px; opacity: 0.9; max-width: 600px; margin: 0 auto; line-height: 1.6; }
+  .result-hero .mortality-badge {
+    display: inline-block; margin-top: 12px; padding: 6px 18px;
+    background: rgba(255,255,255,0.2); border-radius: 20px;
+    font-size: 14px; font-weight: 600; backdrop-filter: blur(4px);
+  }
+
+  .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+
+  .result-card {
+    background: #fff; border-radius: 14px; padding: 22px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05); border: 1px solid var(--gray-100);
+    border-top: 4px solid transparent;
+  }
+  .result-card.top-green  { border-top-color: var(--green-500); }
+  .result-card.top-yellow { border-top-color: var(--yellow-500); }
+  .result-card.top-red    { border-top-color: var(--red-500); }
+  .result-card.top-blue   { border-top-color: var(--blue-500); }
+  .result-card h4 {
+    font-size: 15px; font-weight: 700; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .result-card ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .result-card ul li {
+    font-size: 13.5px; color: var(--gray-700); padding-left: 18px;
+    position: relative; line-height: 1.5;
+  }
+  .result-card ul li::before {
+    content: ''; position: absolute; left: 0; top: 7px;
+    width: 7px; height: 7px; border-radius: 50%;
+  }
+  .result-card.top-green  ul li::before { background: var(--green-500); }
+  .result-card.top-yellow ul li::before { background: var(--yellow-500); }
+  .result-card.top-red    ul li::before { background: var(--red-500); }
+  .result-card.top-blue   ul li::before { background: var(--blue-500); }
+
+  .score-detail { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--gray-100); }
+  .score-bar { display: flex; gap: 2px; margin-top: 8px; border-radius: 6px; overflow: hidden; height: 22px; }
+  .score-bar .seg { transition: flex 0.5s; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
+  .score-bar .seg.low   { background: var(--green-500); }
+  .score-bar .seg.inter { background: var(--yellow-500); }
+  .score-bar .seg.high  { background: var(--red-500); }
+
+  .score-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: var(--gray-500); }
+  .score-legend span { display: flex; align-items: center; gap: 5px; }
+  .score-legend .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .score-legend .dot.dl { background: var(--green-500); }
+  .score-legend .dot.di { background: var(--yellow-500); }
+  .score-legend .dot.dh { background: var(--red-500); }
+
+  .warn-box {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 14px 16px; border-radius: 10px; font-size: 13px; color: var(--gray-700);
+    margin-top: 16px;
+  }
+  .warn-box.red  { background: var(--red-50); border: 1px solid var(--red-100); color: var(--red-700); }
+  .warn-box.blue { background: var(--blue-50); border: 1px solid var(--blue-100); color: var(--blue-700); }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--gray-400); }
+  .empty-state svg { margin-bottom: 12px; opacity: 0.4; }
+
+  .footer {
+    text-align: center; padding: 20px; font-size: 12px; color: var(--gray-400);
+    border-top: 1px solid var(--gray-200); margin-top: 16px;
+  }
+
+  .patient-info-bar {
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    padding: 10px 0;
+  }
+  .patient-info-bar .info-item {
+    font-size: 13px; color: var(--gray-600);
+    background: var(--gray-50); padding: 4px 12px; border-radius: 6px;
+    border: 1px solid var(--gray-200);
+  }
+
+  tbody td[rowspan] { background: #fff; }
+
+  @media (max-width: 768px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .result-grid { grid-template-columns: 1fr; }
+    .header h1 { font-size: 20px; }
+    .btn-row { flex-direction: column; }
+    .btn { justify-content: center; }
+  }
+  @media print {
+    body { background: #fff; }
+    .result-hero { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .btn-row { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <h1>肺动脉高压危险分层评估工具</h1>
+  <p class="subtitle">PAH Risk Stratification Calculator · 基于 2022 ESC/ERS 指南</p>
+</header>
+
+<div class="container">
+
+  <!-- ===== 基本信息 ===== -->
+  <div class="section-card" id="section-patient">
+    <div class="section-head">
+      <div class="icon-circle icon-blue">&#9998;</div>
+      <h3>患者基本信息</h3>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>姓名</label>
+        <input type="text" id="patientName" placeholder="请输入患者姓名">
+      </div>
+      <div class="form-group">
+        <label>年龄</label>
+        <input type="number" id="patientAge" placeholder="岁" min="0" max="120">
+      </div>
+      <div class="form-group">
+        <label>性别</label>
+        <select id="patientSex">
+          <option value="">请选择</option><option value="male">男</option><option value="female">女</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>PAH 亚型</label>
+        <select id="pahType">
+          <option value="">请选择</option>
+          <option value="ipah">特发性 PAH (IPAH)</option>
+          <option value="hpah">遗传性 PAH (HPAH)</option>
+          <option value="drug">药物/毒物相关 PAH</option>
+          <option value="ctd">结缔组织病相关 PAH (CTD-PAH)</option>
+          <option value="chd">先天性心脏病相关 PAH (CHD-PAH)</option>
+          <option value="portal">门脉高压相关 PAH (PoPH)</option>
+          <option value="hiv">HIV 相关 PAH</option>
+          <option value="other">其他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>评估日期</label>
+        <input type="date" id="evalDate">
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 临床评估 ===== -->
+  <div class="section-card" id="section-clinical">
+    <div class="section-head">
+      <div class="icon-circle icon-yellow">&#9878;</div>
+      <h3>临床评估指标</h3>
+      <span class="section-sub">Clinical Assessment</span>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>右心衰竭临床体征</label>
+        <select id="rhfSigns">
+          <option value="">请选择</option>
+          <option value="none">无</option>
+          <option value="mild">无或轻微</option>
+          <option value="present">明确存在（颈静脉怒张/下肢水肿/腹水等）</option>
+        </select>
+        <span class="form-hint">颈静脉压升高、肝颈静脉回流征、下肢水肿、腹水</span>
+      </div>
+      <div class="form-group">
+        <label>晕厥史</label>
+        <select id="syncope">
+          <option value="">请选择</option>
+          <option value="none">无</option>
+          <option value="occasional">偶发或近似晕厥</option>
+          <option value="recurrent">反复晕厥发作</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>WHO 功能分级 (WHO-FC)</label>
+        <select id="whoFc">
+          <option value="">请选择</option>
+          <option value="I">I 级 — 日常体力活动不受限</option>
+          <option value="II">II 级 — 日常活动轻度受限</option>
+          <option value="III">III 级 — 日常活动明显受限</option>
+          <option value="IV">IV 级 — 任何活动均可诱发症状，静息时亦有症状</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 运动能力 ===== -->
+  <div class="section-card" id="section-exercise">
+    <div class="section-head">
+      <div class="icon-circle icon-green">&#9889;</div>
+      <h3>运动能力评估</h3>
+      <span class="section-sub">Exercise Capacity</span>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>6 分钟步行距离 (6MWD) <span class="unit">米</span></label>
+        <input type="number" id="sixMwd" placeholder="输入步行距离" min="0" max="1000" step="1">
+        <span class="form-hint">低危 &gt; 440m · 中危 165-440m · 高危 &lt; 165m</span>
+      </div>
+      <div class="form-group">
+        <label>心肺运动试验 — 峰值 VO₂ <span class="unit">mL/min/kg</span></label>
+        <input type="number" id="peakVo2" placeholder="输入峰值摄氧量" min="0" max="80" step="0.1">
+        <span class="form-hint">低危 &gt; 15 · 中危 11-15 · 高危 &lt; 11（若无数据可留空）</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 生化标志物 ===== -->
+  <div class="section-card" id="section-biomarker">
+    <div class="section-head">
+      <div class="icon-circle icon-blue">&#9732;</div>
+      <h3>生化标志物</h3>
+      <span class="section-sub">Biomarkers</span>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>NT-proBNP <span class="unit">ng/L</span></label>
+        <input type="number" id="ntProbnp" placeholder="输入 NT-proBNP 值" min="0" max="100000" step="1">
+        <span class="form-hint">低危 &lt; 300 · 中危 300-1400 · 高危 &gt; 1400</span>
+      </div>
+      <div class="form-group">
+        <label>BNP <span class="unit">ng/L</span></label>
+        <input type="number" id="bnp" placeholder="输入 BNP 值（选填）" min="0" max="10000" step="1">
+        <span class="form-hint">低危 &lt; 50 · 中危 50-300 · 高危 &gt; 300</span>
+      </div>
+      <div class="form-group">
+        <label>优先使用</label>
+        <select id="biomarkerPrefer">
+          <option value="ntprobnp">优先使用 NT-proBNP</option>
+          <option value="bnp">优先使用 BNP</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 超声心动图 ===== -->
+  <div class="section-card" id="section-echo">
+    <div class="section-head">
+      <div class="icon-circle icon-blue">&#9823;</div>
+      <h3>超声心动图</h3>
+      <span class="section-sub">Echocardiography</span>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>右心房面积 (RAA) <span class="unit">cm²</span></label>
+        <input type="number" id="raa" placeholder="输入右心房面积" min="0" max="100" step="0.1">
+        <span class="form-hint">低危 &lt; 18 · 中危 18-26 · 高危 &gt; 26</span>
+      </div>
+      <div class="form-group">
+        <label>心包积液</label>
+        <select id="pericardial">
+          <option value="">请选择</option>
+          <option value="none">无</option>
+          <option value="trace">微量</option>
+          <option value="present">有（中-大量）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>TAPSE <span class="unit">mm</span> <span style="font-weight:400;color:var(--gray-400);">（选填）</span></label>
+        <input type="number" id="tapse" placeholder="三尖瓣环收缩期位移" min="0" max="50" step="0.1">
+        <span class="form-hint">正常 ≥ 17mm，降低提示右心功能不全</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 血流动力学 ===== -->
+  <div class="section-card" id="section-hemo">
+    <div class="section-head">
+      <div class="icon-circle icon-red">&#9829;</div>
+      <h3>血流动力学参数（右心导管）</h3>
+      <span class="section-sub">Hemodynamics</span>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>右心房压力 (RAP/mRAP) <span class="unit">mmHg</span></label>
+        <input type="number" id="rap" placeholder="输入 RAP" min="0" max="60" step="0.1">
+        <span class="form-hint">低危 &lt; 8 · 中危 8-14 · 高危 &gt; 14</span>
+      </div>
+      <div class="form-group">
+        <label>心指数 (CI) <span class="unit">L/min/m²</span></label>
+        <input type="number" id="ci" placeholder="输入 CI" min="0" max="10" step="0.01">
+        <span class="form-hint">低危 ≥ 2.5 · 中危 2.0-2.5 · 高危 &lt; 2.0</span>
+      </div>
+      <div class="form-group">
+        <label>混合静脉血氧饱和度 (SvO₂) <span class="unit">%</span></label>
+        <input type="number" id="svo2" placeholder="输入 SvO₂" min="0" max="100" step="0.1">
+        <span class="form-hint">低危 &gt; 65 · 中危 60-65 · 高危 &lt; 60</span>
+      </div>
+      <div class="form-group">
+        <label>平均肺动脉压 (mPAP) <span class="unit">mmHg</span> <span style="font-weight:400;color:var(--gray-400);">（选填）</span></label>
+        <input type="number" id="mpap" placeholder="输入 mPAP" min="0" max="120" step="0.1">
+        <span class="form-hint">PAH 诊断标准：静息 mPAP ≥ 25 mmHg（原标准）/ &gt; 20 mmHg（新标准）</span>
+      </div>
+      <div class="form-group">
+        <label>肺血管阻力 (PVR) <span class="unit">WU</span> <span style="font-weight:400;color:var(--gray-400);">（选填）</span></label>
+        <input type="number" id="pvr" placeholder="输入 PVR" min="0" max="50" step="0.01">
+        <span class="form-hint">PAH 诊断标准：PVR &gt; 3 WU（原标准）/ ≥ 2 WU（新标准）</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 按钮组 ===== -->
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="calculateRisk()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      开始评估
+    </button>
+    <button class="btn btn-secondary" onclick="resetForm()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      重置表单
+    </button>
+    <button class="btn btn-secondary" onclick="loadDemo()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+      加载演示数据
+    </button>
+    <button class="btn btn-secondary" onclick="printResult()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 12H4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      打印报告
+    </button>
+  </div>
+
+  <!-- ===== 结果区域 ===== -->
+  <div class="result-panel" id="resultPanel">
+    <!-- 动态填充 -->
+  </div>
+
+</div>
+
+<footer class="footer">
+  <p>参考依据：<strong>2022 ESC/ERS Guidelines for the diagnosis and treatment of pulmonary hypertension</strong> (European Heart Journal, 2022;43:3618–3731)</p>
+  <p style="margin-top:4px;">本工具仅供临床参考使用，具体诊疗决策请结合患者具体情况并在执业医师指导下进行</p>
+</footer>
+
+<script>
+// ===== 危险分层核心逻辑 =====
+
+function classify6MWD(val) {
+  if (val === null || val === '' || isNaN(val)) return null;
+  if (val > 440) return 'low';
+  if (val >= 165) return 'inter';
+  return 'high';
+}
+
+function classifyPeakVo2(val) {
+  if (val === null || val === '' || isNaN(val)) return null;
+  if (val > 15) return 'low';
+  if (val >= 11) return 'inter';
+  return 'high';
+}
+
+function classifyNTproBNP(val) {
+  if (val === null || val === '' || isNaN(val)) return null;
+  if (val < 300) return 'low';
+  if (val <= 1400) return 'inter';
+  return 'high';
+}
+
+function classifyBNP(val) {
+  if (val === null || val === '' || isNaN(val)) return null;
+  if (val < 50) return 'low';
+  if (val <= 300) return 'inter';
+  return 'high';
+}
+
+function classifyRAA(val) {
+  if (val === null || val === '' || isNaN(val)) return null;
+  if (val < 18) return 'low';
+  if (val <= 26) return 'inter';
+  return 'high';
+}
+
+function classifyRAP(val) {
+  if (val === null || val === '' || isNaN(val)) return null;
+  if (val < 8) return 'low';
+  if (val <= 14) return 'inter';
+  return 'high';
+}
+
+function classifyCI(val) {
+  if (val === null || val === '' || isNaN(val)) return null;
+  if (val >= 2.5) return 'low';
+  if (val >= 2.0) return 'inter';
+  return 'high';
+}
+
+function classifySvO2(val) {
+  if (val === null || val === '' || isNaN(val)) return null;
+  if (val > 65) return 'low';
+  if (val >= 60) return 'inter';
+  return 'high';
+}
+
+// 高风险决定因素 — 任一满足即为高危
+const HIGH_RISK_DETERMINANTS = {
+  rhfSigns: 'present',    // 明确右心衰竭
+  syncope: 'recurrent',   // 反复晕厥
+  whoFc: 'IV',            // WHO IV 级
+  ciHigh: true,           // CI < 2.0
+  svo2High: true,         // SvO2 < 60%
+};
+
+function buildResult() {
+  const getVal = id => {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    const v = el.value;
+    if (v === '' || v === null) return null;
+    if (el.type === 'number') {
+      const n = parseFloat(v);
+      return isNaN(n) ? null : n;
+    }
+    return v;
+  };
+
+  const data = {
+    name: getVal('patientName') || '未填写',
+    age: getVal('patientAge'),
+    sex: getVal('patientSex'),
+    pahType: getVal('pahType'),
+    evalDate: getVal('evalDate') || '未填写',
+
+    rhfSigns: getVal('rhfSigns'),
+    syncope: getVal('syncope'),
+    whoFc: getVal('whoFc'),
+
+    sixMwd: getVal('sixMwd'),
+    peakVo2: getVal('peakVo2'),
+
+    ntProbnp: getVal('ntProbnp'),
+    bnp: getVal('bnp'),
+    biomarkerPrefer: getVal('biomarkerPrefer'),
+
+    raa: getVal('raa'),
+    pericardial: getVal('pericardial'),
+    tapse: getVal('tapse'),
+
+    rap: getVal('rap'),
+    ci: getVal('ci'),
+    svo2: getVal('svo2'),
+    mpap: getVal('mpap'),
+    pvr: getVal('pvr'),
+  };
+
+  // 逐项分层
+  const strata = {};
+
+  strata['临床-右心衰竭'] = data.rhfSigns === 'none' ? 'low' : data.rhfSigns === 'mild' ? 'inter' : data.rhfSigns === 'present' ? 'high' : null;
+  strata['临床-晕厥']     = data.syncope === 'none' ? 'low' : data.syncope === 'occasional' ? 'inter' : data.syncope === 'recurrent' ? 'high' : null;
+  strata['临床-WHO FC']   = (data.whoFc === 'I' || data.whoFc === 'II') ? 'low' : data.whoFc === 'III' ? 'inter' : data.whoFc === 'IV' ? 'high' : null;
+
+  strata['运动-6MWD']     = classify6MWD(data.sixMwd);
+  strata['运动-峰值VO₂']  = classifyPeakVo2(data.peakVo2);
+
+  const bioPref = data.biomarkerPrefer || 'ntprobnp';
+  if (bioPref === 'bnp' && data.bnp !== null) {
+    strata['标志物-BNP'] = classifyBNP(data.bnp);
+  } else {
+    strata['标志物-NT-proBNP'] = classifyNTproBNP(data.ntProbnp);
+  }
+
+  strata['超声-右心房面积'] = classifyRAA(data.raa);
+  strata['超声-心包积液']   = data.pericardial === 'none' ? 'low' : data.pericardial === 'trace' ? 'inter' : data.pericardial === 'present' ? 'high' : null;
+
+  strata['血流-RAP']   = classifyRAP(data.rap);
+  strata['血流-CI']    = classifyCI(data.ci);
+  strata['血流-SvO₂']  = classifySvO2(data.svo2);
+
+  // 统计
+  let countLow = 0, countInter = 0, countHigh = 0;
+  const detailItems = [];
+  const availableStrata = {};
+
+  for (const [key, val] of Object.entries(strata)) {
+    if (val === 'low') { countLow++; availableStrata[key] = 'low'; }
+    else if (val === 'inter') { countInter++; availableStrata[key] = 'inter'; }
+    else if (val === 'high') { countHigh++; availableStrata[key] = 'high'; }
+    detailItems.push({ name: key, level: val });
+  }
+
+  const total = countLow + countInter + countHigh;
+
+  // 判定最终危险分层
+  let finalRisk = 'undetermined';
+  let overrideReason = '';
+
+  // 高危决定因素优先
+  if (strata['临床-右心衰竭'] === 'high' || strata['临床-晕厥'] === 'high' || strata['临床-WHO FC'] === 'high' || strata['血流-CI'] === 'high' || strata['血流-SvO₂'] === 'high') {
+    finalRisk = 'high';
+    overrideReason = '存在高危决定因素（右心衰竭/反复晕厥/WHO IV级/CI<2.0/SvO₂<60%）';
+  } else if (countHigh > 0) {
+    finalRisk = 'high';
+    overrideReason = '存在高危指标';
+  } else if (total === 0) {
+    finalRisk = 'undetermined';
+  } else if (countLow >= 4 && countHigh === 0) {
+    finalRisk = 'low';
+  } else if (countInter > countLow) {
+    finalRisk = 'inter';
+  } else if (countLow >= countInter) {
+    finalRisk = 'low'; // 低危指标占多数
+  } else {
+    finalRisk = 'inter';
+  }
+
+  return { data, strata, detailItems, countLow, countInter, countHigh, total, finalRisk, overrideReason };
+}
+
+function calculateRisk() {
+  const result = buildResult();
+  if (result.finalRisk === 'undetermined') {
+    alert('请至少填写部分评估指标后再进行评估。');
+    return;
+  }
+  renderResult(result);
+  document.getElementById('resultPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderResult(r) {
+  const { data, detailItems, countLow, countInter, countHigh, total, finalRisk, overrideReason } = r;
+
+  const riskInfo = {
+    low:   { cn: '低危', en: 'Low Risk', cls: 'risk-low',  mortality: '1 年死亡率 &lt; 5%', desc: '患者预后良好，可在当前治疗方案下继续随访管理。', color: '#15803d' },
+    inter: { cn: '中危', en: 'Intermediate Risk', cls: 'risk-inter', mortality: '1 年死亡率 5%–20%', desc: '患者处于中等风险状态，需密切监测并考虑治疗升级以争取达到低危状态。', color: '#a16207' },
+    high:  { cn: '高危', en: 'High Risk', cls: 'risk-high', mortality: '1 年死亡率 &gt; 20%', desc: '患者病情严重，需立即积极干预，包括起始三联治疗并评估移植指征。', color: '#b91c1c' },
+  }[finalRisk];
+
+  const pctLow = total > 0 ? Math.round(countLow / total * 100) : 0;
+  const pctInter = total > 0 ? Math.round(countInter / total * 100) : 0;
+  const pctHigh = total > 0 ? Math.round(countHigh / total * 100) : 0;
+
+  const sexLabel = data.sex === 'male' ? '男' : data.sex === 'female' ? '女' : '未填写';
+  const ageLabel = data.age ? `${data.age} 岁` : '未填写';
+  const typeLabel = data.pahType ? document.getElementById('pahType').selectedOptions[0].text : '未填写';
+
+  const lowCount = pctLow, interCount = pctInter, highCount = pctHigh;
+
+  let html = '';
+
+  // Hero section
+  html += `
+  <div class="result-hero ${riskInfo.cls}">
+    <div class="risk-level">${riskInfo.cn}</div>
+    <div class="risk-eng">${riskInfo.en}</div>
+    <div class="risk-desc">${riskInfo.desc}</div>
+    <div class="mortality-badge">${riskInfo.mortality}</div>
+  </div>`;
+
+  // 患者信息摘要
+  html += `
+  <div class="section-card" style="margin-bottom:16px;">
+    <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;">
+      <div style="font-size:15px;font-weight:700;color:var(--gray-800);">
+        <span style="color:var(--gray-400);font-weight:400;">患者：</span>${escapeHtml(data.name)}
+      </div>
+      <div class="patient-info-bar" style="margin:0;padding:0;">
+        <span class="info-item">${ageLabel}</span>
+        <span class="info-item">${sexLabel}</span>
+        <span class="info-item">${typeLabel}</span>
+        <span class="info-item">评估日期：${data.evalDate}</span>
+      </div>
+    </div>
+  </div>`;
+
+  // 指标分层明细 + 柱状图
+  html += `
+  <div class="result-grid">
+    <div class="result-card top-blue" style="grid-column: 1 / -1;">
+      <h4>📊 各指标危险分层明细（共评估 ${total} 项）</h4>
+      <div class="score-bar" style="height:28px;border-radius:8px;min-width:200px;">`;
+
+  if (pctLow > 0) html += `<div class="seg low" style="flex:${pctLow};min-width:30px;">${pctLow}%</div>`;
+  if (pctInter > 0) html += `<div class="seg inter" style="flex:${pctInter};min-width:30px;">${pctInter}%</div>`;
+  if (pctHigh > 0) html += `<div class="seg high" style="flex:${pctHigh};min-width:30px;">${pctHigh}%</div>`;
+
+  html += `</div>
+      <div class="score-legend" style="margin-top:10px;">
+        <span><span class="dot dl"></span> 低危指标：${countLow} 项</span>
+        <span><span class="dot di"></span> 中危指标：${countInter} 项</span>
+        <span><span class="dot dh"></span> 高危指标：${countHigh} 项</span>
+      </div>
+      ${overrideReason ? `<div class="warn-box red" style="margin-top:12px;"><span>⚠️</span><span><strong>判定依据：</strong>${overrideReason}</span></div>` : ''}
+      <div style="margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;">`;
+
+  for (const item of detailItems) {
+    const badgeColor = item.level === 'low' ? 'var(--green-600)' : item.level === 'inter' ? 'var(--yellow-600)' : item.level === 'high' ? 'var(--red-600)' : 'var(--gray-400)';
+    const badgeBg = item.level === 'low' ? 'var(--green-50)' : item.level === 'inter' ? 'var(--yellow-50)' : item.level === 'high' ? 'var(--red-50)' : 'var(--gray-50)';
+    const label = item.level === 'low' ? '低危' : item.level === 'inter' ? '中危' : item.level === 'high' ? '高危' : '未填';
+    html += `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--gray-50);border-radius:8px;font-size:13px;">
+        <span style="color:var(--gray-700);">${item.name}</span>
+        <span style="font-weight:600;color:${badgeColor};background:${badgeBg};padding:2px 10px;border-radius:10px;font-size:12px;">${label}</span>
+      </div>`;
+  }
+
+  html += `</div></div>`;
+
+  // ===== 治疗建议 =====
+  html += `<div class="result-card top-green">
+    <h4>💊 推荐治疗方案</h4>
+    <ul>`;
+
+  if (finalRisk === 'low') {
+    html += `
+      <li><strong>初始治疗：</strong>口服双联治疗 — 内皮素受体拮抗剂 (ERA，如安立生坦/马昔腾坦) + PDE5 抑制剂 (PDE5i，如西地那非/他达拉非)</li>
+      <li>若为初治患者且无显著合并症，双联口服方案是标准起始方案</li>
+      <li>继续当前有效治疗方案，维持低危状态为目标</li>
+      <li>关注药物副作用及耐受性，优化生活质量</li>
+      <li>利尿剂控制液体潴留（如有指征）</li>
+      <li>家庭氧疗（若静息 SpO₂ &lt; 90% 或 PaO₂ &lt; 60 mmHg）</li>
+      <li>推荐在康复专家指导下进行运动训练</li>
+    `;
+  } else if (finalRisk === 'inter') {
+    html += `
+      <li><strong>初始治疗：</strong>口服 ERA + PDE5i 双联治疗作为基础方案</li>
+      <li><strong>升级策略：</strong>若年轻且无明显心肺合并症，可考虑起始三联治疗（ERA + PDE5i + 肠外前列环素类似物）</li>
+      <li>若双联治疗 3-6 月后仍未达到低危状态，应加用第三类药物：</li>
+      <li style="margin-left:14px;">— 前列环素受体激动剂（Selexipag，口服）</li>
+      <li style="margin-left:14px;">— 或转换为肠外前列环素类似物（曲前列尼尔/依前列醇）</li>
+      <li>密切监测治疗反应，每 3 个月重新进行危险分层评估</li>
+      <li>推荐转诊至 PAH 专科中心协同管理</li>
+      <li>评估并管理合并症（如 CTD、CHD、肝病等）</li>
+    `;
+  } else {
+    html += `
+      <li><strong>初始治疗（首选）：</strong>起始即给予三联治疗 — ERA + PDE5i + 肠外前列环素类似物（静脉依前列醇或皮下/静脉曲前列尼尔）</li>
+      <li>尽早建立肠外前列环素通路，依前列醇是重症患者的金标准</li>
+      <li>密切监护，必要时收入 PAH 专科中心进行初始治疗</li>
+      <li><strong>强化支持治疗：</strong></li>
+      <li style="margin-left:14px;">— 积极利尿管理右心衰竭（袢利尿剂 ± 螺内酯）</li>
+      <li style="margin-left:14px;">— 必要时正性肌力药物支持（多巴酚丁胺/米力农）</li>
+      <li style="margin-left:14px;">— 维持适当容量状态，避免过度利尿导致低血压</li>
+      <li><strong>移植评估：</strong>若三联治疗后仍为高危，紧急启动肺移植或心肺联合移植评估流程</li>
+      <li><strong>桥接治疗：</strong>部分合适患者可考虑球囊房间隔造口术 (BAS) 作为肺移植前的桥接</li>
+      <li>每 1-3 个月重新全面评估，多学科团队（PAH 专科、心外科、移植科）参与决策</li>
+    `;
+  }
+  html += `</ul></div>`;
+
+  // ===== 预后评估 =====
+  html += `<div class="result-card top-yellow">
+    <h4>📈 预后评估</h4>
+    <ul>`;
+
+  if (finalRisk === 'low') {
+    html += `
+      <li><strong>1 年预估死亡率：&lt; 5%</strong>，预后良好</li>
+      <li>5 年生存率较高，长期预后取决于是否能持续维持低危状态</li>
+      <li>治疗目标已达标（低危状态），重点在于维持和预防恶化</li>
+      <li>若随访中出现指标恶化，需及时调整治疗方案</li>
+      <li>定期监测 REVEAL 2.0 风险评分或 COMPERA 风险评分变化趋势</li>
+    `;
+  } else if (finalRisk === 'inter') {
+    html += `
+      <li><strong>1 年预估死亡率：5%–20%</strong>，需积极干预以改善预后</li>
+      <li>中危患者可进一步细分为中低危 (intermediate-low) 和中高危 (intermediate-high)，后者预后更接近于高危</li>
+      <li>治疗目标是使患者达到并维持在低危状态</li>
+      <li>每 3 个月随访评估是改善预后的关键</li>
+      <li>若经治疗 6-12 个月仍未改善，预后可能趋近高危水平</li>
+    `;
+  } else {
+    html += `
+      <li><strong>1 年预估死亡率：&gt; 20%</strong>，预后严重，需最积极的治疗策略</li>
+      <li>若不及时进行有效干预，短期死亡率显著升高</li>
+      <li>三联治疗 + 早期移植评估可显著改善高危患者的生存率</li>
+      <li>即使在积极治疗下，高危患者的 3 年生存率仍明显低于低危患者</li>
+      <li>多学科管理（PAH 专科医师、移植团队、姑息治疗团队）对改善结局至关重要</li>
+    `;
+  }
+  html += `</ul></div>`;
+
+  // ===== 随访建议 =====
+  html += `<div class="result-card top-blue">
+    <h4>📅 随访监测计划</h4>
+    <ul>`;
+
+  if (finalRisk === 'low') {
+    html += `
+      <li><strong>随访频率：</strong>每 3–6 个月</li>
+      <li>每次随访：临床评估 + WHO-FC + 6MWD + NT-proBNP/BNP</li>
+      <li>每 6–12 个月：超声心动图</li>
+      <li>每年或临床恶化时：右心导管复查</li>
+      <li>每年：流感疫苗、肺炎球菌疫苗、COVID-19 疫苗接种</li>
+      <li>健康教育：识别病情恶化警示信号（体重增加、呼吸困难加重、晕厥等）</li>
+    `;
+  } else if (finalRisk === 'inter') {
+    html += `
+      <li><strong>随访频率：</strong>每 3 个月</li>
+      <li>每次随访：全面临床评估 + WHO-FC + 6MWD + NT-proBNP/BNP + 超声心动图</li>
+      <li>每 6 个月评估是否需要右心导管复查（根据临床变化可更频繁）</li>
+      <li>治疗升级后 3-6 个月再次评估危险分层是否改善</li>
+      <li>建立与 PAH 专科中心的转诊及联合随访机制</li>
+    `;
+  } else {
+    html += `
+      <li><strong>随访频率：</strong>每 1–3 个月或更频繁（根据临床稳定性）</li>
+      <li>每次随访：全面评估，包括临床+WHO-FC+6MWD+NT-proBNP/BNP+超声心动图</li>
+      <li>根据临床需要随时复查右心导管</li>
+      <li>起始三联治疗/肠外前列环素治疗初期可能需要住院监测</li>
+      <li>每 3 个月多学科团队讨论（PAH 专家、移植协调员、心衰专科）</li>
+      <li>若列入移植等候名单，按移植中心要求进行定期评估</li>
+    `;
+  }
+  html += `</ul></div>`;
+
+  // ===== 生活方式 =====
+  html += `<div class="result-card top-blue">
+    <h4>🫁 患者管理及生活指导</h4>
+    <ul>
+      <li><strong>运动：</strong>${finalRisk === 'high' ? '避免剧烈运动和等长运动，低强度日常活动可在监督下进行' : '鼓励适度的有氧运动（步行、骑行），在康复专业人员指导下进行，避免过度疲劳'}</li>
+      <li><strong>液体管理：</strong>每日监测体重，限制液体摄入（${finalRisk === 'high' ? '1.5-2.0' : '2.0-2.5'} L/天），低盐饮食（&lt; 5g/天）</li>
+      <li><strong>妊娠：</strong>强烈建议避孕，PAH 患者妊娠死亡率高，属于绝对禁忌</li>
+      <li><strong>高原/飞行：</strong>避免前往海拔 &gt; 1500–2000 米地区，飞行中可能需要辅助氧疗</li>
+      <li><strong>手术：</strong>${finalRisk === 'high' ? '尽量避免择期手术，必须手术时需在 PAH 专科中心进行，首选局部/区域麻醉' : '择期手术应在 PAH 专科中心进行，与 PAH 团队充分沟通术前术后管理方案'}</li>
+      <li><strong>感染预防：</strong>接种流感、肺炎球菌、COVID-19 疫苗，及时治疗呼吸道感染</li>
+      <li><strong>社会心理支持：</strong>关注患者心理状态，必要时转介心理咨询或支持小组</li>
+    </ul>
+  </div>`;
+
+  html += `</div>`; // close result-grid
+
+  html += `<div class="warn-box blue">
+    <span>🩺</span>
+    <span><strong>临床提示：</strong>危险分层是一个动态过程，应在每次随访时重新评估。治疗目标是使所有患者达到并维持在<strong>低危状态</strong>。对于中危患者，推荐使用四层模型（低危/中低危/中高危/高危）进一步精细化评估。本评估基于 2022 ESC/ERS 指南，具体诊疗决策须结合患者个体情况，在执业医师指导下进行。</span>
+  </div>`;
+
+  document.getElementById('resultPanel').innerHTML = html;
+  document.getElementById('resultPanel').classList.add('show');
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function resetForm() {
+  const inputs = document.querySelectorAll('input, select');
+  inputs.forEach(el => {
+    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    else el.value = '';
+  });
+  document.getElementById('resultPanel').classList.remove('show');
+  document.getElementById('resultPanel').innerHTML = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function loadDemo() {
+  // 加载一个中危患者的演示数据
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+
+  setVal('patientName', '演示患者');
+  setVal('patientAge', '52');
+  setVal('patientSex', 'female');
+  setVal('pahType', 'ipah');
+  setVal('evalDate', new Date().toISOString().split('T')[0]);
+
+  setVal('rhfSigns', 'mild');
+  setVal('syncope', 'none');
+  setVal('whoFc', 'III');
+
+  setVal('sixMwd', '380');
+  setVal('peakVo2', '13.5');
+
+  setVal('ntProbnp', '650');
+  setVal('biomarkerPrefer', 'ntprobnp');
+
+  setVal('raa', '22');
+  setVal('pericardial', 'none');
+  setVal('tapse', '15');
+
+  setVal('rap', '10');
+  setVal('ci', '2.2');
+  setVal('svo2', '62');
+  setVal('mpap', '45');
+  setVal('pvr', '8.5');
+
+  // 滚动到表单顶部
+  document.getElementById('section-patient').scrollIntoView({ behavior: 'smooth' });
+}
+
+function printResult() {
+  window.print();
+}
+
+// 设置默认日期为今天
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('evalDate').value = new Date().toISOString().split('T')[0];
+});
+</script>
+
+</body>
+</html>
